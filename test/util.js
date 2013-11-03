@@ -1,5 +1,6 @@
 module.exports.server_version_at_least = server_version_at_least
 module.exports.singleStringReply = singleStringReply
+module.exports.getClient = getClient
 module.exports.getCleanClient = getCleanClient
 module.exports.emptyReply = emptyReply
 
@@ -38,10 +39,20 @@ function emptyReply(t) {
     }
 }
 
-function getCleanClient(db) {
+var flushed = false;
+
+function getClient(db) {
+    if (flushed == false)
+        return getCleanClient(db);
     db = db || DBNUM;
     var client = redis.createClient(PORT, HOST);
     client.select(db);
+    return client;
+}
+
+function getCleanClient(db) {
+    flushed = true;
+    var client = getClient(db);
     client.flushdb(noop);
     return client;
 }

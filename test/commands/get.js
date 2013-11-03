@@ -1,17 +1,22 @@
 var test = require("tape").test;
 
 var util = require("../util");
-var client = util.getCleanClient();
+var client = util.getClient();
 var singleStringReply = util.singleStringReply;
 
-test("setup", function (t) {
+test("get empty", function (t) {
     t.plan(2);
-    client.set("foo", "bar", singleStringReply(t));
+    client.get("GET_", util.emptyReply(t));
+});
+
+test("set value", function (t) {
+    t.plan(2);
+    client.set("GET_", "bar", singleStringReply(t));
 });
 
 test("get", function (t) {
     t.plan(2);
-    client.get("foo", singleStringReply(t, "bar"));
+    client.get("GET_", singleStringReply(t, "bar"));
 });
 
 test("cleanup", function (t) {
