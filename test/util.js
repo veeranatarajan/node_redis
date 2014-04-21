@@ -1,5 +1,6 @@
 module.exports.server_version_at_least = server_version_at_least;
 module.exports.singleStringReply = singleStringReply;
+module.exports.integerReply = integerReply;
 module.exports.getClient = getClient;
 module.exports.getCleanClient = getCleanClient;
 module.exports.emptyReply = emptyReply;
@@ -26,6 +27,13 @@ function server_version_at_least(connection, desired_version) {
 
 function singleStringReply(t, expected) {
     expected = expected || "OK";
+    return function (err, reply) {
+        t.notOk(err, "No error");
+        t.equals(reply, expected, "Got expected value: " + expected);
+    };
+}
+
+function integerReply(t, expected) {
     return function (err, reply) {
         t.notOk(err, "No error");
         t.equals(reply, expected, "Got expected value: " + expected);
