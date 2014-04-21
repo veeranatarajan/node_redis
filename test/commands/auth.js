@@ -1,7 +1,7 @@
 var test = require("tape").test;
 
 var util = require("../util");
-var client = util.getClient(15, 9006, "filefish.redistogo.com");
+var client = util.getDirtyClient(0, 9006, "filefish.redistogo.com");
 var singleStringReply = util.singleStringReply;
 var integerReply = util.integerReply;
 

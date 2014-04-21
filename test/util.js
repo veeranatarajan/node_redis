@@ -1,6 +1,7 @@
 module.exports.server_version_at_least = server_version_at_least;
 module.exports.singleStringReply = singleStringReply;
 module.exports.integerReply = integerReply;
+module.exports.getDirtyClient = getDirtyClient;
 module.exports.getClient = getClient;
 module.exports.getCleanClient = getCleanClient;
 module.exports.emptyReply = emptyReply;
@@ -29,6 +30,9 @@ function singleStringReply(t, expected) {
     expected = expected || "OK";
     return function (err, reply) {
         t.notOk(err, "No error");
+        if (Buffer.isBuffer(reply)) {
+            reply = reply.toString();
+        }
         t.equals(reply, expected, "Got expected value: " + expected);
     };
 }
@@ -47,19 +51,34 @@ function emptyReply(t) {
     };
 }
 
+// A dirty client won't attempt to flush before running tests.
+function getDirtyClient(db, port, host, opts) {
+    db = (db != null) ? db : DBNUM;
+    port = (port != null) ? port : PORT;
+    host = host || HOST;
+
+    var client = redis.createClient(port, host, opts);
+    if (db) {
+        client.select(db);
+    }
+    return client;
+}
+
 var dbState = {};
 
-function getClient(db, port, host) {
-    db = db || DBNUM;
-    port = port || PORT;
+function getClient(db, port, host, opts) {
+    db = (db != null) ? db : DBNUM;
+    port = (port != null) ? port : PORT;
     host = host || HOST;
 
     if (dbState[db + "~" + port + "~" + host] === undefined) {
         return getCleanClient(db, port, host);
     }
 
-    var client = redis.createClient(port, host);
-    client.select(db);
+    var client = redis.createClient(port, host, opts);
+    if (db) {
+        client.select(db);
+    }
     return client;
 }
 
