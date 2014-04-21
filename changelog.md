@@ -1,6 +1,8 @@
 Changelog
 =========
 
+* Emit error when SELECT command reply is an error but has no callback. (Bryan English)
+
 ## v0.10.1 - February 17, 2014
 
 * Skip plucking redis version from the INFO stream if INFO results weren't provided. (Robert Sköld)
