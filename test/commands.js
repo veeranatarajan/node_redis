@@ -5,6 +5,7 @@ client.flushdb(function () {
     require("./commands/auth");
     // require("./commands/bgrewriteaof");
     // require("./commands/bgsave");
+    require("./commands/bitcount");
     require("./commands/get");
     require("./commands/set");
 });
