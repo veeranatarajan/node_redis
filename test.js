@@ -9,7 +9,7 @@ var redis = require("./index"),
     bclient = redis.createClient(PORT, HOST, { return_buffers: true }),
     assert = require("assert"),
     crypto = require("crypto"),
-    util = require("./lib/util"),
+    util = require("util"),
     fork = require("child_process").fork,
     test_db_num = 15, // this DB will be flushed and used for testing
     tests = {},
@@ -953,7 +953,7 @@ tests.HMGET = function () {
     client.HMSET(key3, {
         "0123456789": "abcdefghij",
         "some manner of key": "a type of value"
-    }, require_string("OK", name));    
+    }, require_string("OK", name));
 
     client.HMGET(key1, "0123456789", "some manner of key", function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0].toString(), name);

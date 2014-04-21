@@ -1,7 +1,7 @@
 "use strict";
 
 var net = require("net"),
-    util = require("./lib/util"),
+    util = require("util"),
     Queue = require("./lib/queue"),
     to_array = require("./lib/to_array"),
     reply_to_object = require("./lib/transform_reply").reply_to_object,
