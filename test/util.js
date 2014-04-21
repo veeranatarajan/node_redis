@@ -47,21 +47,28 @@ function emptyReply(t) {
     };
 }
 
-var flushed = false;
+var dbState = {};
 
-function getClient(db) {
-    if (flushed === false) {
-        return getCleanClient(db);
-    }
+function getClient(db, port, host) {
     db = db || DBNUM;
-    var client = redis.createClient(PORT, HOST);
+    port = port || PORT;
+    host = host || HOST;
+
+    if (dbState[db + "~" + port + "~" + host] === undefined) {
+        return getCleanClient(db, port, host);
+    }
+
+    var client = redis.createClient(port, host);
     client.select(db);
     return client;
 }
 
-function getCleanClient(db) {
-    flushed = true;
-    var client = getClient(db);
+function getCleanClient(db, port, host) {
+    db = db || DBNUM;
+    port = port || PORT;
+    host = host || HOST;
+    dbState[db + "~" + port + "~" + host] = "clean";
+    var client = getClient(db, port, host);
     client.flushdb(noop);
     return client;
 }
