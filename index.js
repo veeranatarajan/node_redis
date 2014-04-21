@@ -3,6 +3,7 @@
 var net = require("net"),
     util = require("util"),
     Queue = require("./lib/queue"),
+    Command = require("./lib/command"),
     to_array = require("./lib/to_array"),
     reply_to_object = require("./lib/transform_reply").reply_to_object,
     reply_to_strings = require("./lib/transform_reply").reply_to_strings,
@@ -674,16 +675,6 @@ RedisClient.prototype.return_reply = function (reply) {
         throw new Error("node_redis command queue state error. If you can reproduce this, please report it.");
     }
 };
-
-// This Command constructor is ever so slightly faster than using an object literal, but more importantly, using
-// a named constructor helps it show up meaningfully in the V8 CPU profiler and in heap snapshots.
-function Command(command, args, sub_command, buffer_args, callback) {
-    this.command = command;
-    this.args = args;
-    this.sub_command = sub_command;
-    this.buffer_args = buffer_args;
-    this.callback = callback;
-}
 
 RedisClient.prototype.send_command = function (command, args, callback) {
     var arg, command_obj, i, il, elem_count, buffer_args, stream = this.stream, command_str = "", buffered_writes = 0, last_arg_type, lcaseCommand;
