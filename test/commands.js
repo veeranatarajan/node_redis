@@ -7,5 +7,6 @@ client.flushdb(function () {
     // require("./commands/bgsave");
     require("./commands/bitcount");
     require("./commands/get");
+    require("./commands/incr");
     require("./commands/set");
 });
