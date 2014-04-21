@@ -1,9 +1,11 @@
-/*global Buffer require exports console setTimeout */
+"use strict";
 
 var net = require("net"),
     util = require("./lib/util"),
     Queue = require("./lib/queue"),
     to_array = require("./lib/to_array"),
+    reply_to_object = require("./lib/transform_reply").reply_to_object,
+    reply_to_strings = require("./lib/transform_reply").reply_to_strings,
     events = require("events"),
     crypto = require("crypto"),
     parsers = [], commands,
@@ -14,10 +16,13 @@ var net = require("net"),
 // can set this to true to enable for all connections
 exports.debug_mode = false;
 
-var arraySlice = Array.prototype.slice
+var Multi = require("./lib/multi");
+exports.Multi = Multi;
+
+var arraySlice = Array.prototype.slice;
 function trace() {
     if (!exports.debug_mode) return;
-    console.log.apply(null, arraySlice.call(arguments))
+    console.log.apply(null, arraySlice.call(arguments));
 }
 
 // hiredis might not be installed
@@ -131,7 +136,7 @@ RedisClient.prototype.unref = function () {
         trace("Not connected yet, will unref later");
         this.once("connect", function () {
             this.unref();
-        })
+        });
     }
 };
 
@@ -205,7 +210,7 @@ RedisClient.prototype.do_auth = function () {
                 }, 2000); // TODO - magic number alert
                 return;
             } else if (err.toString().match("no password is set")) {
-                console.log("Warning: Redis server does not require a password, but a password was supplied.")
+                console.log("Warning: Redis server does not require a password, but a password was supplied.");
                 err = null;
                 res = "OK";
             } else {
@@ -581,42 +586,6 @@ function try_callback(client, callback, reply) {
     }
 }
 
-// hgetall converts its replies to an Object.  If the reply is empty, null is returned.
-function reply_to_object(reply) {
-    var obj = {}, j, jl, key, val;
-
-    if (reply.length === 0) {
-        return null;
-    }
-
-    for (j = 0, jl = reply.length; j < jl; j += 2) {
-        key = reply[j].toString();
-        val = reply[j + 1];
-        obj[key] = val;
-    }
-
-    return obj;
-}
-
-function reply_to_strings(reply) {
-    var i;
-
-    if (Buffer.isBuffer(reply)) {
-        return reply.toString();
-    }
-
-    if (Array.isArray(reply)) {
-        for (i = 0; i < reply.length; i++) {
-            if (reply[i] !== null && reply[i] !== undefined) {
-                reply[i] = reply[i].toString();
-            }
-        }
-        return reply;
-    }
-
-    return reply;
-}
-
 RedisClient.prototype.return_reply = function (reply) {
     var command_obj, len, type, timestamp, argindex, args, queue_len;
 
@@ -914,16 +883,6 @@ RedisClient.prototype.end = function () {
     return this.stream.destroySoon();
 };
 
-function Multi(client, args) {
-    this._client = client;
-    this.queue = [["MULTI"]];
-    if (Array.isArray(args)) {
-        this.queue = this.queue.concat(args);
-    }
-}
-
-exports.Multi = Multi;
-
 // take 2 arrays and return the union of their elements
 function set_union(seta, setb) {
     var obj = {};
@@ -961,11 +920,14 @@ commands.forEach(function (fullCommand) {
     };
     RedisClient.prototype[command.toUpperCase()] = RedisClient.prototype[command];
 
-    Multi.prototype[command] = function () {
-        this.queue.push([command].concat(to_array(arguments)));
-        return this;
-    };
-    Multi.prototype[command.toUpperCase()] = Multi.prototype[command];
+    // Don't add bad or special-cased methods to multi
+    if (["multi", "watch", "exec", "hmset"].indexOf(command) == -1) {
+      Multi.prototype[command] = function () {
+          this.queue.push([command].concat(to_array(arguments)));
+          return this;
+      };
+      Multi.prototype[command.toUpperCase()] = Multi.prototype[command];
+    }
 });
 
 // store db in this.select_db to restore it on reconnect
@@ -1049,97 +1011,6 @@ RedisClient.prototype.hmset = function (args, callback) {
 };
 RedisClient.prototype.HMSET = RedisClient.prototype.hmset;
 
-Multi.prototype.hmset = function () {
-    var args = to_array(arguments), tmp_args;
-    if (args.length >= 2 && typeof args[0] === "string" && typeof args[1] === "object") {
-        tmp_args = [ "hmset", args[0] ];
-        Object.keys(args[1]).map(function (key) {
-            tmp_args.push(key);
-            tmp_args.push(args[1][key]);
-        });
-        if (args[2]) {
-            tmp_args.push(args[2]);
-        }
-        args = tmp_args;
-    } else {
-        args.unshift("hmset");
-    }
-
-    this.queue.push(args);
-    return this;
-};
-Multi.prototype.HMSET = Multi.prototype.hmset;
-
-Multi.prototype.exec = function (callback) {
-    var self = this;
-    var errors = [];
-    // drain queue, callback will catch "QUEUED" or error
-    // TODO - get rid of all of these anonymous functions which are elegant but slow
-    this.queue.forEach(function (args, index) {
-        var command = args[0], obj;
-        if (typeof args[args.length - 1] === "function") {
-            args = args.slice(1, -1);
-        } else {
-            args = args.slice(1);
-        }
-        if (args.length === 1 && Array.isArray(args[0])) {
-            args = args[0];
-        }
-        if (command.toLowerCase() === 'hmset' && typeof args[1] === 'object') {
-            obj = args.pop();
-            Object.keys(obj).forEach(function (key) {
-                args.push(key);
-                args.push(obj[key]);
-            });
-        }
-        this._client.send_command(command, args, function (err, reply) {
-            if (err) {
-                var cur = self.queue[index];
-                if (typeof cur[cur.length - 1] === "function") {
-                    cur[cur.length - 1](err);
-                } else {
-                    errors.push(new Error(err));
-                }
-            }
-        });
-    }, this);
-
-    // TODO - make this callback part of Multi.prototype instead of creating it each time
-    return this._client.send_command("EXEC", [], function (err, replies) {
-        if (err) {
-            if (callback) {
-                errors.push(new Error(err));
-                callback(errors);
-                return;
-            } else {
-                throw new Error(err);
-            }
-        }
-
-        var i, il, reply, args;
-
-        if (replies) {
-            for (i = 1, il = self.queue.length; i < il; i += 1) {
-                reply = replies[i - 1];
-                args = self.queue[i];
-
-                // TODO - confusing and error-prone that hgetall is special cased in two places
-                if (reply && args[0].toLowerCase() === "hgetall") {
-                    replies[i - 1] = reply = reply_to_object(reply);
-                }
-
-                if (typeof args[args.length - 1] === "function") {
-                    args[args.length - 1](null, reply);
-                }
-            }
-        }
-
-        if (callback) {
-            callback(null, replies);
-        }
-    });
-};
-Multi.prototype.EXEC = Multi.prototype.exec;
 
 RedisClient.prototype.multi = function (args) {
     return new Multi(this, args);
@@ -1148,7 +1019,7 @@ RedisClient.prototype.MULTI = function (args) {
     return new Multi(this, args);
 };
 
-
+// note: this requires allowing "eval" in jshint.
 // stash original eval method
 var eval_orig = RedisClient.prototype.eval;
 // hook eval with an attempt to evalsha for cached scripts

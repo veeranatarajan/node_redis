@@ -20,5 +20,12 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/mranney/node_redis.git"
+  },
+  "jshintConfig": {
+    "asi": false,
+    "eqnull": true,
+    "node": true,
+    "evil": true,
+    "eqeqeq": false
   }
 }
