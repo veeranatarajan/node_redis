@@ -1,10 +1,14 @@
 module.exports.server_version_at_least = server_version_at_least;
 module.exports.singleStringReply = singleStringReply;
 module.exports.integerReply = integerReply;
+module.exports.arrayReply = arrayReply;
+module.exports.emptyReply = emptyReply;
+module.exports.errorReply = errorReply;
+module.exports.singleResult = singleResult;
+
 module.exports.getDirtyClient = getDirtyClient;
 module.exports.getClient = getClient;
 module.exports.getCleanClient = getCleanClient;
-module.exports.emptyReply = emptyReply;
 
 var PORT = 6379;
 var HOST = '127.0.0.1';
@@ -33,14 +37,26 @@ function singleStringReply(t, expected) {
         if (Buffer.isBuffer(reply)) {
             reply = reply.toString();
         }
-        t.equals(reply, expected, "Got expected value: " + expected);
+        t.equals(reply, expected, "Got '" + reply + "' expected value: " + expected);
     };
 }
 
 function integerReply(t, expected) {
     return function (err, reply) {
         t.notOk(err, "No error");
-        t.equals(reply, expected, "Got expected value: " + expected);
+        t.equals(reply, expected, "Got '" + reply + "' expected value: " + expected);
+    };
+}
+
+// NOTE: this is expected to be the final test
+function arrayReply(t, expected) {
+    return function (err, replies) {
+        t.notOk(err, "No error");
+        t.equals(replies.length, expected.length, "Wrong number of replies");
+        for (var i = 0; i < replies.length; i++) {
+            t.deepEqual(replies[i], expected[i], "Got '" + replies[i] + "' expected value: " + expected[i]);
+        }
+        t.end();
     };
 }
 
@@ -48,6 +64,20 @@ function emptyReply(t) {
     return function (err, reply) {
         t.notOk(err, "No error");
         t.notOk(reply, "Empty reply");
+    };
+}
+
+function errorReply(t) {
+    return function (err, reply) {
+        t.ok(err, "Error expected");
+        t.notOk(reply, "Reply should be empty");
+    };
+}
+
+function singleResult(t, expected) {
+    return function (err, reply) {
+        t.notOk(err, "No error");
+        t.deepEqual(reply, expected, "Got " + reply + " expected " + expected);
     };
 }
 

@@ -12,10 +12,10 @@
     "test": "node ./test.js"
   },
   "devDependencies": {
-    "metrics": ">=0.1.6",
+    "metrics": ">=0.1.8",
     "colors": "~0.6.2",
-    "underscore": "~1.5.2",
-    "tape": "~2.1.0"
+    "underscore": "~1.6.0",
+    "tape": "~2.12.3"
   },
   "repository": {
     "type": "git",
