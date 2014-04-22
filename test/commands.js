@@ -13,5 +13,6 @@ client.flushdb(function () {
     require("./commands/get");
     require("./commands/incr");
     require("./commands/multi");
+    require("./commands/select");
     require("./commands/set");
 });
