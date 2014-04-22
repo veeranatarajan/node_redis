@@ -12,12 +12,6 @@ var errorReply = util.errorReply;
 var singleResult = util.singleResult;
 var server_version_at_least = util.server_version_at_least;
 
-test("setup", function (t) {
-    t.plan(2);
-    // Need to ensure that the client is connected before the version test below
-    client.ping(singleStringReply(t, "PONG"));
-});
-
 test("single buffer or string", function (t) {
     t.plan(6);
     var val = "string value";

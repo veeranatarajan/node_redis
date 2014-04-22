@@ -12,6 +12,8 @@ var errorReply = util.errorReply;
 var singleResult = util.singleResult;
 var server_version_at_least = util.server_version_at_least;
 
+// This test is somewhat light as almost all tests require SELECT
+
 test("simple select", function (t) {
     t.plan(12);
     client.select(14, singleStringReply(t));

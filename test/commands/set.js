@@ -14,6 +14,17 @@ test("get", function (t) {
     client.get("SET_", util.singleStringReply(t, "bar"));
 });
 
+test("utf8", function (t) {
+    t.plan(8);
+    var hrmph = "ಠ_ಠ";
+
+    client.set(hrmph, "value", util.singleStringReply(t));
+    client.get(hrmph, util.singleStringReply(t, "value"));
+
+    client.set("SET_utf8", hrmph, util.singleStringReply(t));
+    client.get("SET_utf8", util.singleStringReply(t, hrmph));
+});
+
 test("set EX", function (t) {
     t.plan(6);
     client.set("SET_EX", "barEX", "EX", 1, util.singleStringReply(t));
