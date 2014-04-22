@@ -102,7 +102,7 @@ function getClient(db, port, host, opts) {
     host = host || HOST;
 
     if (dbState[db + "~" + port + "~" + host] === undefined) {
-        return getCleanClient(db, port, host);
+        return getCleanClient(db, port, host, opts);
     }
 
     var client = redis.createClient(port, host, opts);
@@ -112,12 +112,12 @@ function getClient(db, port, host, opts) {
     return client;
 }
 
-function getCleanClient(db, port, host) {
+function getCleanClient(db, port, host, opts) {
     db = db || DBNUM;
     port = port || PORT;
     host = host || HOST;
     dbState[db + "~" + port + "~" + host] = "clean";
-    var client = getClient(db, port, host);
+    var client = getClient(db, port, host, opts);
     client.flushdb(noop);
     return client;
 }

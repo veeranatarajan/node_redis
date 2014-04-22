@@ -16,7 +16,7 @@ test("set value", function (t) {
 
 test("get", function (t) {
     t.plan(2);
-    client.get("GET_", singleStringReply(t, "bar"));
+    client.GET("GET_", singleStringReply(t, "bar"));
 });
 
 test("cleanup", function (t) {
