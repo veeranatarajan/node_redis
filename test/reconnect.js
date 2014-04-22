@@ -31,25 +31,29 @@ test("reconnect", function (t) {
     });
 });
 
-// TODO uh, reconnecting a subscriber seems broken?
-test.skip("reconnect subscriber", function (t) {
-    t.plan(12);
+test("reconnect subscriber", function (t) {
+    t.plan(14);
 
     subscriber.on("reconnecting", function on_reconnect(params) {
-        subscriber.on("connect", function on_connect() {
+        subscriber.on("ready", function on_connect() {
             client.publish("RECONNECT_", "test", integerReply(t, 1));
-            subscriber.unsubscribe("RECONNECT_", function (err, res) {
-                t.notOk(err);
+            subscriber.unsubscribe("RECONNECT_", function (err, chan) {
+                t.notOk(err, "No error");
+                t.equals(chan, "RECONNECT_");
                 subscriber.get("RECONNECT_3", singleStringReply(t, "three"));
             });
         });
     });
 
-    subscriber.on("message", singleStringReply(t, "test"));
+    subscriber.on("message", function (channel, msg) {
+        t.equals(channel, "RECONNECT_", "right channel");
+        t.equals(msg, "test", "right message");
+    });
 
     subscriber.set("RECONNECT_3", "three", singleStringReply(t));
-    subscriber.subscribe("RECONNECT_", function (err, res) {
-        t.notOk(err);
+    subscriber.subscribe("RECONNECT_", function (err, chan) {
+        t.notOk(err, "No error");
+        t.equals(chan, "RECONNECT_", "channel ack'd");
         subscriber.stream.destroy();
     });
 
