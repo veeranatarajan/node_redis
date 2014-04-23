@@ -15,7 +15,10 @@ client.flushdb(function () {
     require("./commands/evalsha");
     require("./commands/get");
     require("./commands/incr");
+    require("./commands/lpop");
     require("./commands/multi");
+    require("./commands/rpop");
+    require("./commands/rpoplpush");
     require("./commands/select");
     require("./commands/set");
 });
