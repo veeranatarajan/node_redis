@@ -9,6 +9,7 @@ require("./commands/blpop");
 require("./commands/brpop");
 require("./commands/brpoplpush");
 require("./commands/client");
+require("./commands/config");
 require("./commands/eval");
 require("./commands/evalsha");
 require("./commands/get");
