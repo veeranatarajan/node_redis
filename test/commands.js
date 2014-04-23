@@ -7,6 +7,9 @@ client.flushdb(function () {
     // require("./commands/bgsave");
     require("./commands/bitcount");
     require("./commands/bitpos");
+    require("./commands/blpop");
+    require("./commands/brpop");
+    require("./commands/brpoplpush");
     require("./commands/client");
     require("./commands/eval");
     require("./commands/evalsha");

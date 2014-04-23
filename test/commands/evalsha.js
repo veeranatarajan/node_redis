@@ -15,9 +15,11 @@ var singleResult = util.singleResult;
 var server_version_at_least = util.server_version_at_least;
 
 test("setup", function (t) {
-    t.plan(2);
+    t.plan(6);
     // Need to ensure that the client is connected before the version test below
     client.ping(singleStringReply(t, "PONG"));
+    client.get("EVALSHA_", emptyReply(t));
+    client.set("EVALSHA_", "stored value", singleStringReply(t));
 });
 
 test("EVALSHA", function (t) {
@@ -30,7 +32,6 @@ test("EVALSHA", function (t) {
     var source = "return redis.call('get', 'EVALSHA_')";
     var sha = crypto.createHash("sha1").update(source).digest("hex");
 
-    client.set("EVALSHA_", "stored value");
     client.eval(source, 0, singleStringReply(t, "stored value"));
     client.evalsha(sha, 0, singleStringReply(t, "stored value"));
 });

@@ -59,7 +59,7 @@ test("reconnecting", function (t) {
     t.plan(6);
 
     client.on("reconnecting", function on_reconnect(params) {
-        client.on("connect", function on_connect() {
+        client.on("ready", function on_connect() {
             client.get("RECONNECT_", singleStringReply(t, "one"));
             client.get("RECONNECT_2", singleStringReply(t, "two"));
         });
