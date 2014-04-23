@@ -6,6 +6,7 @@ client.flushdb(function () {
     // require("./commands/bgrewriteaof");
     // require("./commands/bgsave");
     require("./commands/bitcount");
+    require("./commands/bitop");
     require("./commands/bitpos");
     require("./commands/blpop");
     require("./commands/brpop");
