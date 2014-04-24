@@ -6,3 +6,5 @@ require("./reconnect");
 require("./methods");
 require("./events");
 require("./pubsub");
+require("./offline_queue");
+require("./domain");

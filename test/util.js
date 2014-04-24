@@ -113,7 +113,7 @@ function getClient(db, port, host, opts) {
 }
 
 function getCleanClient(db, port, host, opts) {
-    db = db || DBNUM;
+    db = (db != null) ? db : DBNUM;
     port = port || PORT;
     host = host || HOST;
     dbState[db + "~" + port + "~" + host] = "clean";
