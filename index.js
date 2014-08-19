@@ -11,6 +11,8 @@ var net = require("net"),
     default_port = 6379,
     default_host = "127.0.0.1";
 
+var tx = require("transaction-tracer");
+
 // can set this to true to enable for all connections
 exports.debug_mode = false;
 
@@ -669,6 +671,10 @@ RedisClient.prototype.return_reply = function (reply) {
         this.should_buffer = false;
     }
 
+    if (command_obj) {
+        tx.end(command_obj.id);
+    }
+
     if (command_obj && !command_obj.sub_command) {
         if (typeof command_obj.callback === "function") {
             if (this.options.detect_buffers && command_obj.buffer_args === false) {
@@ -733,6 +739,7 @@ RedisClient.prototype.return_reply = function (reply) {
 // This Command constructor is ever so slightly faster than using an object literal, but more importantly, using
 // a named constructor helps it show up meaningfully in the V8 CPU profiler and in heap snapshots.
 function Command(command, args, sub_command, buffer_args, callback) {
+    this.id = tx.start({module: "redis", query: command});
     this.command = command;
     this.args = args;
     this.sub_command = sub_command;

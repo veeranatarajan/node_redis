@@ -19,5 +19,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/mranney/node_redis.git"
+  },
+  "dependencies": {
+    "transaction-tracer": "~1.1.0"
   }
 }
