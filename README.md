@@ -298,6 +298,25 @@ client.get("foo", function (err, value){
 Most Redis commands take a single String or an Array of Strings as arguments, and replies are sent back as a single String or an Array of Strings.
 When dealing with hash values, there are a couple of useful exceptions to this.
 
+### client.hset(hash, obj, [redis.print])
+
+A single value in a hash can be set by supplying an object:
+
+### client.hget(hash, key,  [callback])
+
+A single value in a hash can be get by supplying hash name and a key name :
+
+Example:
+
+    client.hset("hosts", "name", "hello world!", redis.print);
+    client.hget("hosts", "name",  function (err, obj) {
+        console.dir(obj);
+    });
+
+Output:
+
+    hello world!
+
 ### client.hgetall(hash)
 
 The reply from an HGETALL command will be converted into a JavaScript Object by `node_redis`.  That way you can interact
